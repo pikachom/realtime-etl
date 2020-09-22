@@ -26,6 +26,7 @@
     - consume해온 data를 rule에 따라 변환합니다.
         - rule은 customize할 수 있도록 config파일을 통해 주입받습니다.
     - `Storage` 에 변환한 데이터를 저장합니다.
+    - 
 2. 설명...
     - 설명
 
