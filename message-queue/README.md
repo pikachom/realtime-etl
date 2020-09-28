@@ -1,5 +1,8 @@
 ## Message Queue
 
+# 다운로드 및 설치
+http://apache.mirror.cdnetworks.com/kafka/2.6.0/kafka_2.13-2.6.0.tgz
+
 # 압축 해제 및 폴더 진
 $tar -xzf kafka_2.13-2.6.0.tgz
 $cd kafka_2.13-2.6.0
