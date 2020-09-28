@@ -7,17 +7,19 @@
 
 ## Agent
 
-1. 설명...
-    - 설명
-2. 설명...
-    - 설명
+1. Kafka Producer
+    - ProObject Log 를 랜덤으로 생성하여 Producing 하는 프로그램입니다.
+    - 내부 README 참조하여 실행합니다.
+2. Kafka Consumer for Test
+    - Producer 가 제대로 동작하는지 Test 하는 프로그램입니다.
+    - 내부 README 참조하여 실행합니다.
 
 ## Message Queue
 
-1. 설명...
-    - 설명
-2. 설명...
-    - 설명
+1. Kafka
+    - 20.09.28 기준 최신 release 바이너리를 사용합니다.
+2. 사용법
+    - 내부 README 참조하여 실행합니다.
 
 ## Spark-Transform
 
