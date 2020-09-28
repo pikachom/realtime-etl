@@ -9,17 +9,14 @@
 
 1. Kafka Producer
     - ProObject Log 를 랜덤으로 생성하여 Producing 하는 프로그램입니다.
-    - 내부 README 참조하여 실행합니다.
-2. Kafka Consumer for Test
+
+2. Kafka Broker
+    - 최신 binary 를 다운로드하여 실행합니다.
+
+3. Kafka Consumer for Test
     - Producer 가 제대로 동작하는지 Test 하는 프로그램입니다.
-    - 내부 README 참조하여 실행합니다.
 
-## Message Queue
-
-1. Kafka
-    - 20.09.28 기준 최신 release 바이너리를 사용합니다.
-2. 사용법
-    - 내부 README 참조하여 실행합니다.
+내부 README 를 참조하여 실행합니다.
 
 ## Spark-Transform
 
