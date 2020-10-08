@@ -3,22 +3,102 @@ package spark
 
 import com.mongodb.spark._
 import com.mongodb.spark.config.ReadConfig
-import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.functions.{max, min}
 import org.apache.spark.{SparkConf, SparkContext}
-import org.bson.Document
+import org.apache.spark.sql.SparkSession
 
-object MongoSparkMain extends App {
+object MongoSparkMain extends App with ConfigHelper {
 
-  val conf = new SparkConf()
-    .setAppName("spark-transform")
-    .setMaster("local[*]")
 
-  val sc = new SparkContext(conf)
-  val readConfig = ReadConfig(Map("uri" -> "mongodb://127.0.0.1/", "database" -> "test", "collection" -> "zips")) // 1)
-  val zipDf = sc.loadFromMongoDB(readConfig).toDF() // 2)
-  zipDf.printSchema() // 3)
-  zipDf.show()
+  //  val conf = new SparkConf()
+  //    .setAppName("spark-transform")
+  //    .setMaster("local[*]")
+  //
+  //  val sc = new SparkContext(conf)
+  //  val readConfig = ReadConfig(Map("uri" -> "mongodb://127.0.0.1/", "database" -> "test", "collection" -> "zips")) // 1)
+  //  val zipDf = sc.loadFromMongoDB(readConfig).toDF() // 2)
+  //  zipDf.printSchema() // 3)
+  //  zipDf.show()
+
+
+  val spark = SparkSession
+    .builder
+    .appName("spark-transform")
+    .master("local[*]")
+    .getOrCreate()
+
+  // ???
+  import spark.implicits._
+
+  val kafka_df = spark
+    .readStream
+    .format("kafka")
+    .option("kafka.bootstrap.servers", "localhost:9092")
+    .option("subscribe", "test-topic-1")
+    .option("group.id", "test")
+    .load()
+  kafka_df.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)")
+    .as[(String, String)]
+  kafka_df.printSchema()
+
+  //writestream이 필요함
+  //kafka_df.writeStream.foreach()...
+  //kafka_df.show(10)
+
+
+
+  /**
+   * Run this main method to see the output of this quick example or copy the code into the spark shell
+   *
+   * See: http://spark.apache.org/docs/latest/streaming-programming-guide.html
+   * Requires: Netcat running on localhost:9999
+   *
+   * @param args takes an optional single argument for the connection string
+   * @throws Throwable if an operation fails
+   */
+  def main(args: Array[String]): Unit = {
+    val spark: SparkSession = getSparkSession(args) // Don't copy and paste as its already configured in the shell
+    import spark.implicits._
+
+    val lines = spark.readStream
+      .format("socket")
+      .option("host", "localhost")
+      .option("port", 9999)
+      .load()
+
+    val words: Dataset[String] = lines.as[String].flatMap(_.split(" "))
+
+    // Generate running word count
+    val wordCounts = words.groupBy("value").count().map((r: Row) => WordCount(r.getAs[String](0), r.getAs[Long](1)))
+    val query = wordCounts.writeStream
+      .outputMode("complete")
+      .foreach(new ForeachWriter[WordCount] {
+
+        val writeConfig: WriteConfig = WriteConfig(Map("uri" -> "mongodb://localhost/test.coll"))
+        var mongoConnector: MongoConnector = _
+        var wordCounts: mutable.ArrayBuffer[WordCount] = _
+
+        override def process(value: WordCount): Unit = {
+          wordCounts.append(value)
+        }
+
+        override def close(errorOrNull: Throwable): Unit = {
+          if (wordCounts.nonEmpty) {
+            mongoConnector.withCollectionDo(writeConfig, {collection: MongoCollection[Document] =>
+              collection.insertMany(wordCounts.map(wc => { new Document(wc.word, wc.count)}).asJava)
+            })
+          }
+        }
+
+        override def open(partitionId: Long, version: Long): Boolean = {
+          mongoConnector = MongoConnector(writeConfig.asOptions)
+          wordCounts = new mutable.ArrayBuffer[WordCount]()
+          true
+        }
+      })
+      .start()
+
+    query.awaitTermination()
+
 
   // Query 1
 //  println( "States with Populations above 10 Million" )
