@@ -40,10 +40,20 @@ object MongoSparkMain { // extends ConfigHelper {
       .option("subscribe", kafkaTopic)
       .load()
 
+    /** kafkaDf schema
+    root
+     |-- key: binary (nullable = true)
+     |-- value: binary (nullable = true)
+     |-- topic: string (nullable = true)
+     |-- partition: integer (nullable = true)
+     |-- offset: long (nullable = true)
+     |-- timestamp: timestamp (nullable = true)
+     |-- timestampType: integer (nullable = true)
+     */
+
     val logDf = kafkaDf.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)").as[(String, String)]
 
-    /*
-    // print logs on console for debugging
+    /** print logs on console for debugging
     val consoleOutput = logDf.writeStream
       .outputMode("append")
       .format("console")
