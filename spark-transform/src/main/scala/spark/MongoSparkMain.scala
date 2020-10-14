@@ -64,7 +64,8 @@ object MongoSparkMain { // extends ConfigHelper {
         }
 
         override def process(value: (String, String)): Unit = {
-          logs.append(value)
+          val logLines = value._2.split("\n")
+          logLines.foreach(line => logs.append((value._1, line)))
         }
 
         override def close(errorOrNull: Throwable): Unit = {
